@@ -1,0 +1,224 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --sun-yellow: #ffcc00;
+    --sun-orange: #ff6600;
+    --terminal-amber: #ffb000;
+    --workstation-gray: #2d2d2d;
+    --paper-white: #fdfdf8;
+    --ink-black: #1a1a1a;
+    --shadow-gray: #666666;
+    --manpage-bg: #f0f0f0;
+    --manpage-border: #999999;
+}
+
+body {
+    font-family: 'Courier New', 'Liberation Mono', monospace;
+    background: var(--paper-white);
+    color: var(--ink-black);
+    line-height: 1.4;
+    font-size: 14px;
+}
+
+.header {
+    background: var(--paper-white);
+    border-bottom: 2px solid var(--ink-black);
+    padding: 30px 60px;
+    position: relative;
+}
+
+.nav {
+    background: #f8f8f5;
+    border-bottom: 1px solid var(--ink-black);
+    padding: 15px 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.nav-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 30px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sun {
+    color: var(--sun-orange);
+}
+
+.logo {
+    font-size: 28px;
+    font-weight: bold;
+    color: var(--ink-black);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    position: relative;
+
+    & .sun {
+	position: relative;
+    }
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 30px 20px;
+}
+
+.article {
+    background: var(--paper-white);
+    border: 2px solid var(--ink-black);
+    padding: 30px;
+    box-shadow: 4px 4px 0 var(--shadow-gray);
+
+    & .title {
+	font-size: 24px;
+	font-weight: bold;
+	text-transform: uppercase;
+	margin-bottom: 20px;
+	color: var(--ink-black);
+    }
+
+    & .content {
+	& p {
+	    margin-bottom: 20px;
+	    line-height: 1.6;
+	}
+
+	& a {
+	    text-transform: uppercase;
+	    text-decoration: none;
+	    color: var(--sun-orange);
+
+	    &:hover {
+		color: var(--terminal-amber);
+	    }
+	}
+
+	& ul {
+	    margin: 20px;
+	    list-style: none;
+	    counter-reset: circle-counter;
+
+	    & li {
+		counter-increment: circle-counter;
+
+		&::before {
+		    content: counter(circle-counter);
+		    width: 15px;
+		    height: 15px;
+		    margin: 4px;
+		    display: inline-flex;
+		    align-items: center;
+		    justify-content: center;
+		    border-radius: 50%;
+		    border: 1px solid var(--sun-yellow);
+		}
+	    }
+	}
+
+	& h2 {
+	    font-size: 18px;
+	    font-weight: bold;
+	    text-transform: uppercase;
+	    margin: 30px 0 15px 0;
+	    border-left: 4px solid var(--sun-orange);
+	    padding-left: 15px;
+	}
+    }
+}
+
+disclaimer {
+    background: var(--sun-yellow);
+    display: block;
+    padding: 16px;
+}
+
+man-ref {
+    background: var(--manpage-bg);
+    border: 1px solid var(--manpage-border);
+    padding: 2px 6px;
+    text-transform: uppercase;
+    font-family: monospace;
+    font-size: 13px;
+    color: var(--sun-orange);
+    cursor: pointer;
+    text-decoration: none;
+    font-weight: bold;
+    transition: all 0.2s ease;
+
+    &:hover {
+	background: var(--sun-orange);
+	color: white;
+	transform: translate(-1px, -1px);
+	box-shadow: 2px 2px 0 var(--ink-black);
+    }
+}
+
+code {
+    padding: 10px;
+    padding-top: 0px;
+    display: block;
+    white-space: pre-wrap;
+    margin: 10px;
+    margin-bottom: 20px;
+    font-family: monospace;
+    background: var(--ink-black);
+    color: var(--paper-white);
+
+    & keyword {
+	color: var(--sun-orange);
+    }
+
+    & filter {
+	color: var(--sun-yellow);
+    }
+
+    & string {
+	color: #aaa;
+    }
+
+    & diffred {
+	color: red;
+	background: #600000;
+    }
+
+    & diffgreen {
+	color: green;
+	background: #003000;
+    }
+}
+
+icode {
+    padding: 0px 3px;
+    display: inline-block;
+    white-space: pre;
+    font-family: monospace;
+    background: var(--ink-black);
+    color: var(--terminal-amber);
+}
+
+quote {
+    display: block;
+    background: #eee;
+    padding: 15px 30px;
+    margin-bottom: 15px;
+    border-left: 2px solid var(--sun-yellow);
+}
+
+number-ref {
+    width: 20px;
+    height: 20px;
+    margin: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid var(--sun-yellow);
+}
+
