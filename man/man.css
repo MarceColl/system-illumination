@@ -1,0 +1,252 @@
+/* man.css - Man page styling based on SYSTEM•ILLUMINATION theme */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --sun-yellow: #ffcc00;
+    --sun-orange: #ff6600;
+    --terminal-amber: #ffb000;
+    --workstation-gray: #2d2d2d;
+    --paper-white: #fdfdf8;
+    --ink-black: #1a1a1a;
+    --shadow-gray: #666666;
+    --manpage-bg: #f0f0f0;
+    --manpage-border: #999999;
+    --code-bg: #f8f9fa;
+}
+
+body {
+    font-family: 'Courier New', 'Liberation Mono', monospace;
+    background: var(--paper-white);
+    color: var(--ink-black);
+    line-height: 1.6;
+    font-size: 14px;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 30px 20px;
+}
+
+/* Header table styling */
+.head {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 30px;
+    background: var(--paper-white);
+    border: 2px solid var(--ink-black);
+    box-shadow: 4px 4px 0 var(--shadow-gray);
+}
+
+.head td {
+    padding: 15px;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 16px;
+    color: var(--ink-black);
+}
+
+.head-ltitle, .head-rtitle {
+    color: var(--sun-orange);
+}
+
+.head-vol {
+    text-align: center;
+    border-left: 1px solid var(--ink-black);
+    border-right: 1px solid var(--ink-black);
+}
+
+/* Main manual text container */
+.manual-text {
+    background: var(--paper-white);
+    border: 2px solid var(--ink-black);
+    padding: 30px;
+    box-shadow: 4px 4px 0 var(--shadow-gray);
+    margin-top: 20px;
+}
+
+/* Section headers */
+.Sh {
+    margin: 30px 0 20px 0;
+}
+
+.Sh h1 {
+    font-size: 18px;
+    font-weight: bold;
+    text-transform: uppercase;
+    border-left: 4px solid var(--sun-orange);
+    padding-left: 15px;
+    margin-bottom: 15px;
+    color: var(--ink-black);
+}
+
+/* Permalink anchors */
+.permalink {
+    color: var(--sun-orange);
+    text-decoration: none;
+}
+
+.permalink:hover {
+    color: var(--terminal-amber);
+}
+
+/* Paragraphs */
+.Pp {
+    margin-bottom: 15px;
+    line-height: 1.6;
+}
+
+/* Code blocks and preformatted text */
+pre {
+    background: var(--ink-black);
+    color: var(--paper-white);
+    padding: 15px;
+    margin: 15px 0;
+    white-space: pre-wrap;
+    overflow-x: auto;
+    border-left: 4px solid var(--sun-orange);
+    font-family: 'Courier New', 'Liberation Mono', monospace;
+}
+
+/* Bold text - context-aware contrast */
+b {
+    color: var(--ink-black);
+    font-weight: bold;
+}
+
+/* Italic text - context-aware contrast */
+i {
+    color: var(--workstation-gray);
+    font-style: italic;
+}
+
+/* Inside preformatted blocks (synopsis), use light colors on dark background */
+pre b {
+    color: var(--sun-orange);
+    font-weight: bold;
+}
+
+pre i {
+    color: var(--terminal-amber);
+    font-style: italic;
+}
+
+/* Definition lists - improved contrast */
+.Bl-tag {
+    margin: 15px 0;
+}
+
+.Bl-tag dt {
+    font-weight: bold;
+    color: var(--ink-black);
+    margin-top: 10px;
+}
+
+.Bl-tag dd {
+    margin-left: 20px;
+    margin-bottom: 10px;
+    color: var(--ink-black);
+}
+
+/* Indented blocks */
+.Bd-indent {
+    margin-left: 30px;
+    margin-bottom: 15px;
+}
+
+/* Tables */
+table.tbl {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    background: var(--code-bg);
+    border: 2px solid var(--ink-black);
+}
+
+table.tbl td, table.tbl th {
+    padding: 10px;
+    border: 1px solid var(--manpage-border);
+    text-align: left;
+}
+
+table.tbl tr:first-child {
+    background: var(--manpage-bg);
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+/* Footer table */
+.foot {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 40px;
+    padding: 15px;
+    border-top: 2px solid var(--ink-black);
+    font-size: 12px;
+    color: var(--shadow-gray);
+}
+
+.foot td {
+    padding: 10px 0;
+}
+
+.foot-date {
+    text-align: left;
+}
+
+.foot-os {
+    text-align: right;
+}
+
+/* Remove the ugly gray rectangles - just style option flags cleanly */
+section.Sh p b {
+    color: var(--sun-orange);
+    font-weight: bold;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* Links */
+a {
+    color: var(--sun-orange);
+    text-decoration: none;
+    text-transform: uppercase;
+}
+
+a:hover {
+    color: var(--terminal-amber);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    body {
+        padding: 15px;
+        font-size: 13px;
+    }
+    
+    .head td {
+        padding: 10px;
+        font-size: 14px;
+    }
+    
+    .manual-text {
+        padding: 20px;
+    }
+    
+    .Sh h1 {
+        font-size: 16px;
+    }
+    
+    .Bd-indent {
+        margin-left: 15px;
+    }
+}
+
+/* Hide empty paragraphs */
+.Pp:empty {
+    display: none;
+}

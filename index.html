@@ -50,37 +50,48 @@
 	  </p>
 
 	  <p>
-	    Katarineko is built with <a href="https://elixir-lang.org/">Elixir</a>, a
-	    language that runs on the erlang virtual machine. For some reasons I won't
-	    get into here, I also have a couple of NIFs written in Rust. NIFs are the
-	    main way you can call into compiled languages from Erlang/Elixir. The
-	    <a href="https://github.com/rusterlium/rustler">Rustler</a> project is a
-	    very straightforward way of integrating NIFs written in Rust, it handles
-	    compilation lifecycle, exposing all the right structures and functions,
-	    and serializations between erlang and rust, including support for serde.
-	    We'll get into how this works a bit further down.
+	    Katarineko is built
+	    with <a href="https://elixir-lang.org/">Elixir</a>, a
+	    language that runs on the erlang virtual machine. For some
+	    reasons I won't get into here, I also have a couple of
+	    NIFs written in Rust. NIFs are the main way you can call
+	    into compiled languages from Erlang/Elixir. The
+	    <a href="https://github.com/rusterlium/rustler">Rustler</a>
+	    project is a very straightforward way of integrating NIFs
+	    written in Rust, it handles compilation lifecycle,
+	    exposing all the right structures and functions, and
+	    serializations between erlang and rust, including support
+	    for serde.  We'll get into how this works a bit further
+	    down.
 	  </p>
 
 	  <p>
-	    Migrating was quite simple, I used <a href="https://pkgsrc.illumos.am/">pkgsrc</a>
-	    to get Elixir packages, setup some zones, and I was up an running within a day.
-	    At first everything appeared to be running fine, no errors, page was running
-	    smoothly. I shared the beta version with a friend that was testing and he tried
-	    to use the Spaced-Repetition system.
-	    <icode>:erlang.nif_error(:nif_not_loaded)</icode>. The Sun gods had
-	    provided an opportunity to explore the famous observability tooling of Solaris
-	    earlier than I thought. Let's get right to it!
+	    Migrating was quite simple, I
+	    used <a href="https://pkgsrc.illumos.am/">pkgsrc</a> to
+	    get Elixir packages, setup some zones, and I was up an
+	    running within a day.  At first everything appeared to be
+	    running fine, no errors, page was running smoothly. I
+	    shared the beta version with a friend that was testing and
+	    he tried to use the Spaced-Repetition system.
+	    <icode>:erlang.nif_error(:nif_not_loaded)</icode>. The Sun
+	    gods had provided an opportunity to explore the famous
+	    observability tooling of Solaris earlier than I
+	    thought. Let's get right to it!
 	  </p>
 
 	  <h2><span class="sun">dtrace</span> primer</h2>
 
 	  <p>
-	    One of my reasons to move to Illumos was to learn <man-ref>dtrace(8)</man-ref>.
-	    <strong><em>dtrace</em></strong> is a dynamic tracing framework to observe
-	    the state and evolution of the system and user programs. We will use it extensively
-	    during this debugging session so it's better to get a bit acquainted with it's syntax
-	    and capabilities. The D language is a mix between
-	    <a href="https://en.wikipedia.org/wiki/AWK">awk</a> and C. Let's check an example:
+	    One of my reasons to move to Illumos was to
+	    learn <a href="/man/dtrace.8.html"><man-ref>dtrace(8)</man-ref></a>.
+	    <strong><em>dtrace</em></strong> is a dynamic tracing
+	    framework to observe the state and evolution of the system
+	    and user programs. We will use it extensively during this
+	    debugging session so it's better to get a bit acquainted
+	    with it's syntax and capabilities. The D language is a mix
+	    between
+	    <a href="https://en.wikipedia.org/wiki/AWK">awk</a> and
+	    C. Let's check an example:
 	  </p>
 
 	  <code>
@@ -130,13 +141,17 @@
 	  <h2>Erlang NIFs with Rustler</h2>
 
 	  <p>
-	    Okay, so NIFs didn't load, how do NIFs usually load? At this point the only thing I know
-	    is that NIFs are loaded from a shared library, an <icode>.so</icode> file
-	    in unixes. So let's use <strong><em>DTrace</em></strong> to figure out what erlang code
-	    is responsible for this to try to find where it goes wrong.
-	    Since it's a shared library object, it's probably using dlopen.
-	    For reasons I can't remember I traced the <man-ref>open(2)</man-ref> syscall instead.
-	    Here's a very small script I wrote for this purpose.
+	    Okay, so NIFs didn't load, how do NIFs usually load? At
+	    this point the only thing I know is that NIFs are loaded
+	    from a shared library, an <icode>.so</icode> file in
+	    unixes. So let's use <strong><em>DTrace</em></strong> to
+	    figure out what erlang code is responsible for this to try
+	    to find where it goes wrong.  Since it's a shared library
+	    object, it's probably using dlopen.  For reasons I can't
+	    remember I traced
+	    the <a href="/man/open.2.html"><man-ref>open(2)</man-ref></a>
+	    syscall instead.  Here's a very small script I wrote for
+	    this purpose.
 	  </p>
 
 	  <code>
@@ -485,12 +500,18 @@
 	  <h2><icode>ld.so.1</icode></h2>
 
 	  <p>
-	    <man-ref>ld.so.1(1)</man-ref> is the illumos runtime linker for dynamic objects, and it's the one
-	    in charge of loading the shared library objects like our NIF library. One of the tasks after loading
-	    and resolving symbols is calling the initialization functions, there are several sections for this,
-	    but as mentioned before the one we care about is <icode>.init_array</icode>. Init array is an array
-	    of pointers to functions that is ran sequentially. These functions are executed before
-	    <man-ref>dlopen(3C)</man-ref> returns. Let's check if those were properly populated in the binary.
+	    <a href="/man/ld.so.1.1.html"><man-ref>ld.so.1(1)</man-ref></a>
+	    is the illumos runtime linker for dynamic objects, and
+	    it's the one in charge of loading the shared library
+	    objects like our NIF library. One of the tasks after
+	    loading and resolving symbols is calling the
+	    initialization functions, there are several sections for
+	    this, but as mentioned before the one we care about
+	    is <icode>.init_array</icode>. Init array is an array of
+	    pointers to functions that is ran sequentially. These
+	    functions are executed before
+	    <a href="/man/dlopen.3c.html"><man-ref>dlopen(3C)</man-ref></a> returns. Let's check if
+	    those were properly populated in the binary.
 	  </p>
 
 	  <code>
@@ -517,11 +538,15 @@
 	  </p>
 
 	  <p>
-	    We'll start with a script that stops the process when we are about to start the
-	    <man-ref>dlopen(3)</man-ref> initialization section, let's browse the linker code to find a good
-	    place to trace. Once we find it the idea is to check find out when we are opening the library we
-	    care about, then before initialization (but after symbols are loaded! very important since we need
-	    to be able to attach probes to the <icode>__CTOR</icode> symbols). The
+	    We'll start with a script that stops the process when we
+	    are about to start the
+	    <a href="/man/dlopen.3.html"><man-ref>dlopen(3)</man-ref></a>
+	    initialization section, let's browse the linker code to
+	    find a good place to trace. Once we find it the idea is to
+	    check find out when we are opening the library we care
+	    about, then before initialization (but after symbols are
+	    loaded! very important since we need to be able to attach
+	    probes to the <icode>__CTOR</icode> symbols). The
 	    <a href="https://github.com/illumos/illumos-gate/blob/master/usr/src/cmd/sgs/rtld/common/util.c#L702">
 	      <icode>call_init</icode> function
 	    </a>
@@ -552,12 +577,19 @@
 	  </code>
 
 	  <p>
-	    This script has three clauses, the first one checks when we are executing <man-ref>dlopen(3)</man-ref>
-	    for the target library we want. In that case we set a thread-local variable stating that we
-	    are intending to trace, the second clause removes that thread-local variable so no other calls
-	    to <icode>call_init</icode> stop the process. The third clause ensures we stop the process just before
-	    starting the initialization code. We need to call this script with <strong><em>DTrace</em></strong>'s
-	    <icode>-w</icode> flag, to allow destructive operations (like stopping the process).
+	    This script has three clauses, the first one checks when
+	    we are
+	    executing <a href="/man/dlopen.3.html"><man-ref>dlopen(3)</man-ref></a>
+	    for the target library we want. In that case we set a
+	    thread-local variable stating that we are intending to
+	    trace, the second clause removes that thread-local
+	    variable so no other calls to <icode>call_init</icode>
+	    stop the process. The third clause ensures we stop the
+	    process just before starting the initialization code. We
+	    need to call this script
+	    with <strong><em>DTrace</em></strong>'s
+	    <icode>-w</icode> flag, to allow destructive operations
+	    (like stopping the process).
 	  </p>
 
 	  <p>
@@ -570,9 +602,12 @@
 	  </code>
 
 	  <p>
-	    Now we kill the first dtrace program since we can only trace a program once and run the second
-	    D script. That will automatically resume the process and output trace logs if any of the probes
-	    matched. <strong><em>They didn't. Does <man-ref>ld.so.1(1)</man-ref> support <icode>.init_array</icode>?</em></strong>.
+	    Now we kill the first dtrace program since we can only
+	    trace a program once and run the second D script. That
+	    will automatically resume the process and output trace
+	    logs if any of the probes matched. <strong><em>They
+	    didn't. Does <a href="/man/ld.so.1.1.html"><man-ref>ld.so.1(1)</man-ref></a>
+	    support <icode>.init_array</icode>?</em></strong>.
 	  </p>
 
 	  <h2>Et tu, ELF?</h2>
@@ -659,8 +694,11 @@
 	  </p>
 
 	  <p>
-	    Let's check what <man-ref>elfedit(1)</man-ref> has to say about the <icode>.init_array</icode>
-	    section and why it reports a size of 1 when I see 10 <icode>__CTOR</icode> symbols inside.
+	    Let's check
+	    what <a href="/man/elfedit.1.html"><man-ref>elfedit(1)</man-ref></a>
+	    has to say about the <icode>.init_array</icode> section
+	    and why it reports a size of 1 when I see
+	    10 <icode>__CTOR</icode> symbols inside.
 	  </p>
 
 	  <code>
@@ -682,25 +720,36 @@
 	  </code>
 
 	  <p>
-	    <em>Ooh..</em> we get <strong>TWO</strong> <icode>.init_array</icode> sections!! And the first one
-	    has one entry (<icode>0x8 bytes</icode>). Looking at the <man-ref>ld.so.1(1)</man-ref>
-	    <icode>call_init</icode> code again I can see that it only expects a single <icode>.init_array</icode>
-	    section, and I guess it takes the first one it sees? (The answer is no, but I didn't know yet).
+	    <em>Ooh..</em> we
+	    get <strong>TWO</strong> <icode>.init_array</icode>
+	    sections!! And the first one has one entry (<icode>0x8
+	    bytes</icode>). Looking at
+	    the <a href="/man/ld.so.1.1.html"><man-ref>ld.so.1(1)</man-ref></a>
+	    <icode>call_init</icode> code again I can see that it only
+	    expects a single <icode>.init_array</icode> section, and I
+	    guess it takes the first one it sees? (The answer is no,
+	    but I didn't know yet).
 	  </p>
 
 	  <h2>Et tu, <icode>/usr/bin/ld</icode>?</h2>
 
 	  <p>
-	    Okay, so how do I fix this? Several things came to mind, first thing was to create a link script,
-	    however it seems that the Illumos linker is a bit more limited in this aspect than the GNU one I'm
-	    (more or less) used to. There is a thing called a <icode>mapfile</icode> but the documentation is
-	    honestly pretty bad and I couldn't figure it out.
+	    Okay, so how do I fix this? Several things came to mind,
+	    first thing was to create a link script, however it seems
+	    that the Illumos linker is a bit more limited in this
+	    aspect than the GNU one I'm (more or less) used to. There
+	    is a thing called a <icode>mapfile</icode> but the
+	    documentation is honestly pretty bad and I couldn't figure
+	    it out.
 	  </p>
 
 	  <p>
-	    The next thing I tested was creating a C program using <man-ref>libelf(3lib)</man-ref>, I did implement
-	    it trying to merge both sections. When I did tho elfdump complained a lot about a lot of broken references.
-	    In between those complaints I saw one thing that caught my eye.
+	    The next thing I tested was creating a C program
+	    using <a href="/man/libelf.3lib.html"><man-ref>libelf(3lib)</man-ref></a>,
+	    I did implement it trying to merge both sections. When I
+	    did tho elfdump complained a lot about a lot of broken
+	    references.  In between those complaints I saw one thing
+	    that caught my eye.
 	  </p>
 
 	  <code>
@@ -711,8 +760,8 @@
 	  <p>
 	    Hmmm, what is this? These are <icode>.dynamic</icode> table entries and they tell the
 	    runtime linker where to get certain information. And these two entries in particular tell
-	    <man-ref>ld.so.1(1)</man-ref> which <icode>.init_array</icode> section to use!
-	    <man-ref>elfdump(1)</man-ref> has the <icode>-d</icode> flag to dump the dynamic section. 
+	    <a href="/man/ld.so.1.1.html"><man-ref>ld.so.1(1)</man-ref></a> which <icode>.init_array</icode> section to use!
+	    <a href="/man/elfdump.1.html"><man-ref>elfdump(1)</man-ref></a> has the <icode>-d</icode> flag to dump the dynamic section. 
 	  </p>
 
 	  <code>
@@ -767,9 +816,9 @@
 
 	  <p>
 	    So, what happens if I change these values to the values for the other
-	    <icode>.init_array</icode> section? We can do that easily with <man-ref>elfedit(1)</man-ref>.
+	    <icode>.init_array</icode> section? We can do that easily with <a href="/man/elfedit.1.html"><man-ref>elfedit(1)</man-ref></a>.
 	    Note that we also set the <icode>sh_type</icode> of the "wrong" section to
-	    <icode>SHT_NULL</icode>, I'm not sure if it's needed but <man-ref>elfdump(1)</man-ref>
+	    <icode>SHT_NULL</icode>, I'm not sure if it's needed but <a href="/man/elfdump.1.html"><man-ref>elfdump(1)</man-ref></a>
 	    complains if I don't do it.
 	  </p>
 
