@@ -708,9 +708,9 @@
 	  </code>
 
 	  <p>
-	    Hmmm, what is this? These are <icode>.dynamic</icode> table entries and they tell the
-	    runtime linker where to get certain information. And these two entries in particular tell
-	    <a href="/man/ld.so.1.1.html"><man-ref>ld.so.1(1)</man-ref></a> which <icode>.init_array</icode> section to use!
+	    Hmmm, what is this?
+	    These are <icode>.dynamic</icode> table entries, and they tell the runtime linker where to obtain certain information.
+	    And these two entries in particular tell <a href="/man/ld.so.1.1.html"><man-ref>ld.so.1(1)</man-ref></a> which <icode>.init_array</icode> section to use!
 	    <a href="/man/elfdump.1.html"><man-ref>elfdump(1)</man-ref></a> has the <icode>-d</icode> flag to dump the dynamic section. 
 	  </p>
 
@@ -765,8 +765,8 @@
 	  </code>
 
 	  <p>
-	    So, what happens if I change these values to the values for the other
-	    <icode>.init_array</icode> section? We can do that easily with <a href="/man/elfedit.1.html"><man-ref>elfedit(1)</man-ref></a>.
+	    So, what happens if I change these values to the values for the other <icode>.init_array</icode> section?
+	    We can do that easily with <a href="/man/elfedit.1.html"><man-ref>elfedit(1)</man-ref></a>.
 	    Note that we also set the <icode>sh_type</icode> of the "wrong" section to
 	    <icode>SHT_NULL</icode>, I'm not sure if it is needed but <a href="/man/elfdump.1.html"><man-ref>elfdump(1)</man-ref></a>
 	    complains if I don't do it.
