@@ -785,24 +785,94 @@
 	    Aaaand... <em>it works!</em> NIFs now are properly loaded.
 	  </p>
 
-	  <h2>Next steps and open questions</h2>
+	  <h2>How to fix?</h2>
 
 	  <p>
-	    For now this has unblocked the release of my project, I've added
-	    an extra step when building to change the dynamic table values so the corrent
-	    <icode>.init_array</icode> gets called. However, a question remains, why are two
-	    separate sections created while in Linux there's only one section? It must
-	    of course be a difference in the linkers. I haven't found a way to force the linker
-	    to merge both sections, if you know let me know at
-	    <strong>marce [at] dziban [dot] net</strong>. My best guess is that both sections have
-	    different flags, which prevents the sections from merging. The "wrong" section has
-	    <icode>sh_flags: [ SHF_WRITE SHF_ALLOC ]</icode> while the correct one has
-	    <icode>sh_flags: [ SHF_WRITE SHF_ALLOC 0x100000 ]</icode>. That <icode>0x100000</icode>
-	    flag is a Solaris flag that is not recognized by illumos, from my research it corresponds
-	    to <icode>SHF_SUNW_NODISCARD</icode>, which prevents the compiler and linker from
-	    discarding the section even if it appears unused. I wonder what's adding that flag?
-	    <a href="https://reviews.llvm.org/D107955">Is it LLVM?</a> Maybe the <icode>#[used]</icode>
-	    macro from the <em>Inventory</em> crate?
+	    This section wasn't originally here, but after jclulow from the illumos dev team popped into the
+	    <a href="https://lobste.rs/s/nr8kkd/debugging_rustler_on_illumos">lobste.rs comment section</a>
+	  I did a small test to see under what conditions the extra section is created due to the extra <icode>0x1000000</icode> flag.
+	  </p>
+
+	  <code>
+    #![feature(used_with_arg)]
+
+    unsafe extern "C" fn something_important() -> u32 {
+	4
+    }
+
+    #[used(linker)]
+    #[unsafe(link_section=".init_array")]
+    static __LINKER_USED: unsafe extern "C" fn() -> u32 = something_important;
+
+    #[used(compiler)]
+    #[unsafe(link_section=".init_array")]
+    static __COMPILER_USED: unsafe extern "C" fn() -> u32 = something_important;
+
+    #[used]
+    #[unsafe(link_section=".init_array")]
+    static __GLOBAL_USED: unsafe extern "C" fn() -> u32 = something_important;
+
+    #[unsafe(link_section=".init_array")]
+    static __NO_USED: unsafe extern "C" fn() -> u32 = something_important;
+	  </code>
+
+	  <p>
+	    I compiled and checked the ELF sections.
+	  </p>
+
+	  <code>
+    $ elfedit -e 'shdr:dump .init_array' target/release/used_test
+    Section Header[381]:  sh_name: .init_array
+	sh_addr:      0x53a318            sh_flags:   [ SHF_WRITE SHF_ALLOC ]
+	sh_size:      0x10                sh_type:    [ SHT_INIT_ARRAY ]
+	sh_offset:    0x12a318            sh_entsize: 0x8 (2 entries)
+	sh_link:      0                   sh_info:    0
+	sh_addralign: 0x8
+
+    Section Header[382]:  sh_name: .init_array
+	sh_addr:      0x53a328            sh_flags:   [ SHF_WRITE SHF_ALLOC 0x100000 ]
+	sh_size:      0x10                sh_type:    [ SHT_INIT_ARRAY ]
+	sh_offset:    0x12a328            sh_entsize: 0x8 (2 entries)
+	sh_link:      0                   sh_info:    0
+	sh_addralign: 0x8
+    $ elfdump target/release/used_test | grep .init_arraySection Header[381]:  sh_name: .init_array
+    Section Header[382]:  sh_name: .init_array
+	[382]  0x000000000053a318 0x0000000000000000  SECT LOCL  D    0 .init_array
+	[383]  0x000000000053a328 0x0000000000000000  SECT LOCL  D    0 .init_array
+	[428]  0x000000000053a318 0x0000000000000000  OBJT LOCL  D    0 .init_array    __frame_dummy_init_array_entry
+	[434]  0x000000000053a328 0x0000000000000008  OBJT LOCL  D    0 .init_array    _ZN9used_test13__GLOBAL_USED17h294a925286ed5ba2E
+	[435]  0x000000000053a330 0x0000000000000008  OBJT LOCL  D    0 .init_array    _ZN9used_test13__LINKER_USED17he633f978140de8d2E
+	[436]  0x000000000053a320 0x0000000000000008  OBJT LOCL  D    0 .init_array    _ZN9used_test15__COMPILER_USED17hed26777939e150ebE
+	  </code>
+
+	  <p>
+	    Both <icode>__GLOBAL_USED</icode> and <icode>__LINKER_USED</icode> appear in the second section, the one with the <icode>0x100000</icode> flag.
+	    The <icode>__COMPILER_USED</icode> appears in the first section, the one that <a href="/man/ld.so.1.1.html"><man-ref>ld.so.1(1)</man-ref></a>
+	    will execute by default.
+
+	    <icode>__NO_USED</icode> doesn't appear in the release compilation, but does appear in the debug one.
+	  </p>
+
+	  <p>
+	    So the problem is using <icode>#[used]</icode> or <icode>#[used(linker)]</icode> with entries that will end up in <icode>.init_array</icode>.
+	    I'm honestly unsure if the problem is in what LLVM is doing, or if it's the illumos linker, but it can be resolved by
+	    changing <icode>#[used]</icode> for <icode>#[used(compiler)]</icode> under illumos.
+
+	    Sadly <icode>#[used(compiler)]</icode> only works in Rust nightly since it depends on an unstable flag, <icode>used_with_arg</icode>.
+	    I've opened a <a href="https://github.com/dtolnay/inventory/pull/84">PR</a> with Inventory.
+	    The idea is to only need nighlty under illumos.
+	    Let's see if it's a good enough compromise for the maintainer.
+	    I wouldn't be super happy with it, but it's somewhat reasonable.
+	    I'll also need to open a PR to rustler, since they will need to enable the feature in their crate.
+	  </p>
+
+	  <p>
+	    While doing my research I found some related LLVM patches and other links that may be of interest.
+	    <a href="https://github.com/rust-lang/rust/blob/05abce5d058db0de3abd10f32f1a442d0f699b30/compiler/rustc_codegen_llvm/src/consts.rs#L516-L519">A mention in the rust source about the llvm.used sections and related gold linker errors that are similar to those of illumos ld</a>,
+	    <a href="https://reviews.llvm.org/D97448">an LLVM mention of <icode>SHF_GNU_RETAIN</icode> flag when <icode>llvm.used</icode> is used</a>
+	    and <a href="https://reviews.llvm.org/D107955#:~:text=One,them">a patchset that replaces <icode>SHF_GNU_RETAIN</icode> with
+	      <icode>SHF_SUNW_NODISCARD</icode> under Solaris/illumos</a>.
+	    <icode>SHF_SUNW_NODISCARD</icode> is the mysterious <icode>0x100000</icode> flag.
 	  </p>
 	</div>
       </main>
