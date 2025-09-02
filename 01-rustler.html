@@ -25,16 +25,16 @@
 	<div class="content">
 	  <p>
 	    Welcome to <span class="sun">SYSTEM</span>&bull;ILLUMINATION! This is the first
-	    illumination I write and the one that spawned the idea to start this space.
+	    illumination I have written and the one that prompted me to start this space.
 	    This first session tackles several topics as you join me on the journey
-	    I took to debug <a href="">Rustler</a> misbehaving under OmniOS.
+	    I took to debug <a href="">Rustler</a> misbehaving on OmniOS.
 	  </p>
 
 	  <disclaimer>
-	    I'm a beginner with Illumos, this page serves a twofold purpose, to help me
+	    I'm a beginner with Illumos. This page serves a twofold purpose: to help me
 	    document and clarify my learnings as I delve into the Illumos/Solaris world.
 	    And to shine a bit of light into a system that is fairly obscure and hard
-	    to get good info on. However because I'm also learning it, I may be wrong
+	    to get good info on. However, because I'm also learning it, I may be wrong
 	    on many things. Use the information in these pages as a starting point for
 	    your own investigations.
 	  </disclaimer>
@@ -43,40 +43,40 @@
 
 	  <p>
 	    Recently I decided I wanted to delve deeper into the
-	    Illumos world; I had briefly used it a couple of years ago
-	    for a small server I was running.  Two of weeks ago I had
+	    Illumos ecosystem; I had briefly used it a couple of years ago
+	    for a small server I was running. Two weeks ago, I had
 	    to decide on and build the final infrastructure
 	    for <a href="https://katarineko.com">Katarineko</a> a
 	    personal project I'm about to release. I had the choice
-	    between my trusted Linux or giving in to the voice in my
+	    between using my trusted Linux or giving in to the voice in my
 	    head that said <em>USE ILLUMOS!</em>. I did give in, maybe
-	    not the sanest choice, but it's my choice.
+	    not the sanest choice, but it is my choice.
 	  </p>
 
 	  <p>
 	    Katarineko is built
 	    with <a href="https://elixir-lang.org/">Elixir</a>, a
-	    language that runs on the erlang virtual machine. For some
-	    reasons I won't get into here, I also have a couple of
+	    language that runs on the Erlang virtual machine. For 
+	    reasons I will not get into here, I also have a couple of
 	    NIFs written in Rust. NIFs are the main way you can call
 	    into compiled languages from Erlang/Elixir. The
 	    <a href="https://github.com/rusterlium/rustler">Rustler</a>
 	    project is a very straightforward way of integrating NIFs
 	    written in Rust, it handles compilation lifecycle,
 	    exposing all the right structures and functions, and
-	    serializations between erlang and rust, including support
-	    for serde.  We'll get into how this works a bit further
+	    serialization between Erlang and Rust, including support
+	    for Serde.  We'll get into how this works a bit further
 	    down.
 	  </p>
 
 	  <p>
-	    Migrating was quite simple, I
+	    Migrating was quite simple. I
 	    used <a href="https://pkgsrc.illumos.am/">pkgsrc</a> to
-	    get Elixir packages, setup some zones, and I was up an
-	    running within a day.  At first everything appeared to be
-	    running fine, no errors, page was running smoothly. I
-	    shared the beta version with a friend that was testing and
-	    he tried to use the Spaced-Repetition system.
+	    get Elixir packages, set up some zones, and I was up and
+	    running within a day. At first, everything appeared to be
+	    running properly: there were no errors, and the page was
+	    running smoothly. I shared the beta version with a friend
+	    that was testing and he tried to use the Spaced-Repetition system.
 	    <icode>:erlang.nif_error(:nif_not_loaded)</icode>. The Sun
 	    gods had provided an opportunity to explore the famous
 	    observability tooling of Solaris earlier than I
@@ -86,13 +86,13 @@
 	  <h2><span class="sun">dtrace</span> primer</h2>
 
 	  <p>
-	    One of my reasons to move to Illumos was to
+	    One reason for moving to Illumos was to
 	    learn <a href="/man/dtrace.8.html"><man-ref>dtrace(8)</man-ref></a>.
 	    <strong><em>dtrace</em></strong> is a dynamic tracing
 	    framework to observe the state and evolution of the system
 	    and user programs. We will use it extensively during this
-	    debugging session so it's better to get a bit acquainted
-	    with it's syntax and capabilities. The D language is a mix
+	    debugging session, so it is better to become acquainted
+	    with its syntax and capabilities. The D language is a mix
 	    between
 	    <a href="https://en.wikipedia.org/wiki/AWK">awk</a> and
 	    C. Let's check an example:
@@ -134,7 +134,7 @@
 	    You'll see how this becomes useful very soon. Thread-local variables are referenced
 	    by using the <em>-></em> operator to the identifier <em>self</em>.
 	    For example <icode>self->trace = 1</icode> sets a thread-local variable
-	    named <em>trace</em> to the value 1.
+	    named <em>trace</em> to the value one.
 	  </p>
 
 	  <p>
@@ -145,17 +145,15 @@
 	  <h2>Erlang NIFs with Rustler</h2>
 
 	  <p>
-	    Okay, so NIFs didn't load, how do NIFs usually load?
+	    NIFs didn't load. How do NIFs usually load?
 	    The only thing I knew is that NIFs are loaded
 	    from a shared library, an <icode>.so</icode> file in
-	    unixes. So let's use <strong><em>DTrace</em></strong> to
-	    figure out what erlang code is responsible for this to try
-	    to find where it goes wrong.  Since it's a shared library
-	    object, it's probably using dlopen.  For reasons I can't
-	    remember I traced
-	    the <a href="/man/open.2.html"><man-ref>open(2)</man-ref></a>
-	    syscall instead. Here's a very small script I wrote for
-	    this purpose.
+	    Unix-like systems. So let's use <strong><em>DTrace</em></strong>
+	    to figure out what Erlang code is responsible for this to try
+	    to find where it goes wrong.  Since it is a shared library
+	    object, it is probably using dlopen.  For reasons I cannot
+	    remember, I traced the <a href="/man/open.2.html"><man-ref>open(2)</man-ref></a>
+	    syscall instead. Here's a very small script I wrote for this purpose.
 	  </p>
 
 	  <code>
@@ -205,17 +203,13 @@
 	  </code>
 
 	  <p>
-	    We very quickly find
-	    out <a href="https://github.com/erlang/otp/blob/ed8445a63861f510d21e27c9122e4fafa8039d9d/erts/emulator/beam/erl_nif.c#L4679">which
-	    function</a> in erlang is responsible for loading the
-	    nifs. Let's take a look at the function and see what could
-	    be going wrong or what else we could inspect to understand
-	    the problem better. The function seems to take care of
-	    most error conditions that were going on through my
-	    mind. It seemed to me like there was no problem loading
-	    the shared library at all. In case I was wrong I added a
-	    user function trace for <icode>load_nif_error</icode>, but
-	    it was never called.
+	    We quickly find <a href="https://github.com/erlang/otp/blob/ed8445a63861f510d21e27c9122e4fafa8039d9d/erts/emulator/beam/erl_nif.c#L4679">which function</a>
+	    in Erlang is responsible for loading the nifs.
+
+	    Let's take a look at the function and see what could be going wrong or what else we could inspect to understand the problem better.
+	    The function seems to take care of most error conditions that were going on through my mind.
+	    It seemed there was no problem loading the shared library.
+	    In case I was wrong, I added a user function trace for <icode>load_nif_error</icode>, but it was never called.
 	  </p>
 
 	  <code>
@@ -226,9 +220,8 @@
 	  </code>
 
 	  <p>
-	    To validate that it truly was working okay, I traced the user function
-	    <icode>patch_call_nif_early</icode> that is called only in the case
-	    everything went well.
+	    To confirm that it was working properly, I traced the user function <icode>patch_call_nif_early</icode> that is called only in the case
+	    everything goes well.
 	  </p>
 
 	  <code>
@@ -240,15 +233,12 @@
 	  </code>
 
 	  <p>
-	    It was properly called, so it seemed that
-	    erlang was properly loading everything and it was
-	    considering that everything was working fine, however no
-	    NIF was actually being loaded. I needed to understand a
-	    bit more how the shared library actually exposes the NIFs
-	    and how erlang discovers the functions.  Here I also
-	    cloned the rustler repo and checked if the tests failed
-	    for their repo as well or if it was my own setup. All
-	    their tests failed as well.
+	    It was called, so Erlang appeared to load everything correctly and to consider the operation successful; however, no
+	    NIF was actually being loaded.
+
+	    I needed to understand a bit more how the shared library actually exposes the NIFs and how Erlang discovers the functions.
+	    Here I also cloned the Rustler repo and checked if the tests failed for their repo as well or if it was my own setup.
+	    All of their tests failed as well.
 	  </p>
 
 	  <h2>NIF Shared Libraries</h2>
@@ -286,23 +276,17 @@
 	  </code>
 
 	  <p>
-	    When erlang loads a NIF shared library, it looks for a symbol
-	    <icode>nif_init</icode> and calls it with no arguments,
-	    this function returns an <icode>ErlNifEntry</icode> that
-	    among other stuff contains a piece of information very useful for us. The
-	    <icode>num_of_funcs</icode>. I was thinking
-	    that maybe, for some reason, under Illumos rustler was not properly
-	    populating the function array.
+	    When Erlang loads a NIF shared library, it looks for a symbol <icode>nif_init</icode> and calls it with no arguments.
+	    This function returns an <icode>ErlNifEntry</icode> that, among other information, contains a field useful for us: <icode>num_of_funcs</icode>.
+	    I was thinking that maybe, for some reason, under Illumos Rustler was not properly populating the function array.
 	  </p>
 
 	  <p>
-	    Now, I wasn't sure how to use structs in DTrace, and I was in an
-	    <a href="https://en.wikipedia.org/wiki/AVE">AVE</a> heading to my first
-	    <a href="https://en.wikipedia.org/wiki/Go_(game)">Go</a> tournament and I had
-	    very bad internet so I went with what I knew. I created a small shared library
-	    that internally called the actual NIF shared library. The idea was to be able
-	    to introspect what the NIF shared library was returning in the 
-	    <icode>ErlNifEntry</icode>.
+	    Now, I wasn't sure how to use structs in DTrace, and I was in an <a href="https://en.wikipedia.org/wiki/AVE">AVE</a> heading to my first
+	    <a href="https://en.wikipedia.org/wiki/Go_(game)">Go</a> tournament and I had very bad internet so I went with what I knew.
+
+	    I created a small shared library that internally called the actual NIF shared library.
+	    The idea was to be able to introspect what the NIF shared library was returning in the <icode>ErlNifEntry</icode>.
 	  </p>
 
 	  <code>
@@ -343,22 +327,19 @@
 	  </code>
 
 	  <p>
-	    Compiled this as a shared library, and loaded this library instead
-	    of the original. It all loaded fine, the name and version looked good
-	    (so it seems we did have a valid entry), however the number of functions was 0.
-	    It seems that whatever rustler does to gather all the nifs wasn't working
-	    on Illumos.
+	    I compiled this as a shared library and loaded this library instead of the original.
+	    It all loaded fine, the name and version looked good (so it seems we did have a valid entry).
+	    However the number of functions was zero.
+	    It seems that whatever Rustler does to gather all the NIFs wasn't working on Illumos.
 	  </p>
 
 	  <h2>Rustler Internals</h2>
 
 	  <p>
-	    I dove into the
-	    <a href="https://github.com/rusterlium/rustler/blob/master/">rustler codebase</a>.
-	    It's fairly small but it contains a lot of fairly hard to follow code (at least for me)
-	    with several macros and code generation. Since I knew that at some point it had to generate
-	    an entry I looked for places where entry was referenced. Finally I found
-	    <a href="https://github.com/rusterlium/rustler/blob/730303e4aca8c526f25ec3b73118974696be3394/rustler_codegen/src/init.rs#L88-L91">this section</a> of the code.
+	    I dove into the <a href="https://github.com/rusterlium/rustler/blob/master/">Rustler codebase</a>.
+	    It is fairly small but it contains a lot of fairly hard to follow code (at least for me) with several macros and string-based code generation.
+	    Since I knew that at some point it had to generate a NIF entry I looked for places where entry was referenced.
+	    Finally I found <a href="https://github.com/rusterlium/rustler/blob/730303e4aca8c526f25ec3b73118974696be3394/rustler_codegen/src/init.rs#L88-L91">this section</a> of the code.
 	  </p>
 
 	  <code>
@@ -369,11 +350,9 @@
 	  </code>
 
 	  <p>
-	    By some (for now unkown) mechanism the functions were available in this
-	    <em>inventory</em> iterator. A quick <icode>println!</icode>
-	    debugging showed that indeed, <icode>nif_funcs</icode> was
-	    empty. I also saw that the NIFs where
-	    <a href="https://github.com/rusterlium/rustler/blob/730303e4aca8c526f25ec3b73118974696be3394/rustler_codegen/src/nif.rs#L57-L97">added to this inventory</a>
+	    By some (for now unkown) mechanism the functions were available in this <em>inventory</em> iterator.
+	    A quick <icode>println!</icode> debugging showed that indeed, <icode>nif_funcs</icode> was empty.
+	    I also saw that the NIFs were <a href="https://github.com/rusterlium/rustler/blob/730303e4aca8c526f25ec3b73118974696be3394/rustler_codegen/src/nif.rs#L57-L97">added to this inventory</a>
 	    in the <icode>#[nif]</icode> macro.
 	  </p>
 
@@ -388,12 +367,10 @@
 	  </code>
 
 	  <p>
-	    Somehow, at the top level this <icode>submit!</icode> was adding
-	    structs to this <icode>inventory</icode> structure. And this mechanism
-	    intuitively seemed to be the culprit. I validated that these macros
-	    were being called for the functions I was exposing, but when collecting the
-	    NIFs, they were empty. One more layer, enter the
-	    <a href="https://github.com/dtolnay/inventory">Inventory crate</a>.
+	    Somehow, at the top level, <icode>submit!</icode> was adding structs to this <icode>inventory</icode>.
+	    And this mechanism intuitively seemed to be the culprit.
+	    I validated that these macros were being called for the functions I was exposing, but when collecting the NIFs, they were empty.
+	    One more layer, enter the <a href="https://github.com/dtolnay/inventory">Inventory crate</a>.
 	  </p>
 
 	  <h2>The Inventory Crate</h2>
@@ -403,9 +380,8 @@
 	  </p>
 
 	  <quote>
-	    a way to set up a plugin registry into which plugins can be registered from any
-	    source file linked into your application. There does not need to be a central
-	    list of all the plugins
+	    a way to set up a plugin registry into which plugins can be registered from any source file linked into your application.
+	    There does not need to be a central list of all the plugins
 	  </quote>
 
 	  <p>
@@ -413,36 +389,28 @@
 	  </p>
 
 	  <quote>
-	    Inventory is built on runtime initialization functions
-	    similar to __attribute__((constructor)) in C, and similar
-	    to the ctor crate. Each call to inventory::submit!
-	    produces a shim that evaluates the given expression and
-	    registers it into a registry of its corresponding
-	    type. This registration happens dynamically as part of
-	    life-before-main for statically linked elements. Elements
-	    brought in by a dynamically loaded library are registered
-	    at the time that dlopen occurs.
+	    Inventory is built on runtime initialization functions similar to __attribute__((constructor)) in C, and similar to the ctor crate.
+	    Each call to inventory::submit! produces a shim that evaluates the given expression and registers it into a registry of its corresponding type.
+	    This registration happens dynamically as part of life-before-main for statically linked elements.
+	    Elements brought in by a dynamically loaded library are registered at the time that dlopen occurs.
 	  </quote>
 
 	  <p>
-	    <strong><em>Inventory</em></strong> is a very small library, a little under 600 lines
-	    of code, most of it comments and documentation. The most interesting and relevant part
-	    is the <a href="https://github.com/dtolnay/inventory/blob/master/src/lib.rs#L498-L570">
-	      <icode>__do_submit</icode> macro
-	    </a>. Let's dissect what the macro is doing.
+	    <strong><em>Inventory</em></strong> is a very small library, a little under 600 lines of code, most of it comments and documentation.
+	    The most interesting and relevant part is the <a href="https://github.com/dtolnay/inventory/blob/master/src/lib.rs#L498-L570"> <icode>__do_submit</icode> macro </a>.
+	    Let's dissect what the macro is doing.
 	  </p>
 
 	  <p>
-	    It requires you to define a <em>Plugin</em> type. In this case it's <icode>rustler::Nif</icode>.
-	    Once the library is loaded, when you call the <icode>collect!</icode> macro from the crate
-	    it will implement a <icode>Registry</icode> trait for your type. This trait will later allow
-	    submitting the structs at runtime and building the linked list dynamically. Let's see how
-	    that works.
+	    It requires you to define a <em>Plugin</em> type.
+	    In this case it is <icode>rustler::Nif</icode>.
+	    Once the library is loaded, when you call the <icode>collect!</icode> macro from the crate it will implement a <icode>Registry</icode> trait for your type.
+	    This trait will later allow submitting the structs at runtime and building the linked list dynamically.
+	    Let's see how that works.
 	  </p>
 
 	  <p>
-	    For each <icode>submit!</icode> it generates an <icode>__INVENTORY</icode>
-	    value that contains the <icode>rustler::Nif</icode> struct.
+	    For each <icode>submit!</icode> it generates an <icode>__INVENTORY</icode> value that contains the <icode>rustler::Nif</icode> struct.
 	  </p>
 
 	  <code>
@@ -455,8 +423,7 @@
 	  </code>
 
 	  <p>
-	    A function <icode>__ctor()</icode> is generated that will submit the node
-	    to the defined registry when called at library load time.
+	    A function <icode>__ctor()</icode> is generated; when called at library load time, it submits the node to the registry.
 	  </p>
 
 	  <code>
@@ -466,10 +433,10 @@
 	  </code>
 
 	  <p>
-	    Calling all of these functions populates a linked list (using the <icode>next</icode> attribute
-	    from the <icode>Node</icode> type) that will then be walked by the <icode>iter()</icode> method 
-	    we saw earlier. The last piece of the puzzle adds the address of <icode>__ctor()</icode> to
-	    the <icode>.init_array</icode> section of the ELF file in the case of illumos.
+	    Calling all of these functions populates a linked list (using the <icode>next</icode> attribute from the <icode>Node</icode> type)
+	    that will then be walked by the <icode>iter()</icode> method we saw earlier.
+
+	    The last piece of the puzzle adds the address of <icode>__ctor()</icode> to the <icode>.init_array</icode> section of the ELF file in the case of Illumos.
 	  </p>
 
 	  <code>
@@ -509,18 +476,15 @@
 	  <h2><icode>ld.so.1</icode></h2>
 
 	  <p>
-	    <a href="/man/ld.so.1.1.html"><man-ref>ld.so.1(1)</man-ref></a>
-	    is the illumos runtime linker for dynamic objects, and
-	    it's the one in charge of loading the shared library
-	    objects like our NIF library. One of the tasks after
-	    loading and resolving symbols is calling the
-	    initialization functions, there are several sections for
-	    this, but as mentioned before the one we care about
-	    is <icode>.init_array</icode>. Init array is an array of
-	    pointers to functions that is ran sequentially. These
-	    functions are executed before
-	    <a href="/man/dlopen.3c.html"><man-ref>dlopen(3C)</man-ref></a> returns. Let's check if
-	    those were properly populated in the binary.
+	    <a href="/man/ld.so.1.1.html"><man-ref>ld.so.1(1)</man-ref></a> is the Illumos runtime linker for dynamic objects, and it is responsible 
+	    for loading the shared library objects like our NIF library.
+
+	    One of the tasks after loading and resolving symbols is calling the initialization functions, there are several sections for this, but as mentioned
+	    before the one we care about is <icode>.init_array</icode>.
+
+	    <icode>.init_array</icode> is an array of pointers to functions that is run sequentially.
+	    These functions are executed before <a href="/man/dlopen.3c.html"><man-ref>dlopen(3C)</man-ref></a> returns.
+	    Let's check if those were properly populated in the binary.
 	  </p>
 
 	  <code>
@@ -538,28 +502,26 @@
 	  </code>
 
 	  <p>
-	    So they are where they are supposed to be, what's unclear is if they are properly called.
-	    Since it's not working maybe the illumos runtime linker doesn't take into account
-	    <icode>.init_array</icode>? The other option is that the functions themselves are not working 
-	    but I find that unlikely and I don't think there should be a difference between Linux and Ilumos
-	    in this case. Let's test the theory and check if they are being called at all. Since the symbols
-	    will not be available until dlopen has been called we'll need to employ a bit of a trick with dtrace.
+	    So they are where they are supposed to be; what's unclear is whether they are properly called.
+	    Since it is not working maybe the Illumos runtime linker doesn't take into account <icode>.init_array</icode>?
+	    The other option is that the functions themselves are not working but I find that unlikely and I don't think there should be a
+	    difference between Linux and Ilumos in this case.
+
+	    Let's test the theory and check if they are being called at all.
+	    Since the symbols will not be available until dlopen has been called we'll need to employ a bit of a trick with dtrace.
 	  </p>
 
 	  <p>
-	    We'll start with a script that stops the process when we
-	    are about to start the
-	    <a href="/man/dlopen.3.html"><man-ref>dlopen(3)</man-ref></a>
-	    initialization section, let's browse the linker code to
-	    find a good place to trace. Once we find it the idea is to
-	    check find out when we are opening the library we care
-	    about, then before initialization (but after symbols are
-	    loaded! very important since we need to be able to attach
-	    probes to the <icode>__CTOR</icode> symbols). The
-	    <a href="https://github.com/illumos/illumos-gate/blob/master/usr/src/cmd/sgs/rtld/common/util.c#L702">
-	      <icode>call_init</icode> function
-	    </a>
-	    seems like a good place to do so. Let's write the D script to stop the process once we arrive there.
+	    We'll start with a script that stops the process when we are about to start the <a href="/man/dlopen.3.html"><man-ref>dlopen(3)</man-ref></a>
+	    initialization section, let's browse the linker code to find a good place to trace.
+
+	    Once we find it, the idea is to determine when we open the library we care about, and then stop before initialization
+	    (but after symbols are loaded; very important, since we need to be able to attach probes to the <icode>__CTOR</icode> symbols).
+
+	    The <a href="https://github.com/illumos/illumos-gate/blob/master/usr/src/cmd/sgs/rtld/common/util.c#L702">
+	      <icode>call_init</icode> function</a> seems like a good place to do so.
+
+	    Let's write the D script to stop the process once we arrive there.
 	  </p>
 
 	  <code>
@@ -586,19 +548,15 @@
 	  </code>
 
 	  <p>
-	    This script has three clauses, the first one checks when
-	    we are
-	    executing <a href="/man/dlopen.3.html"><man-ref>dlopen(3)</man-ref></a>
-	    for the target library we want. In that case we set a
-	    thread-local variable stating that we are intending to
-	    trace, the second clause removes that thread-local
-	    variable so no other calls to <icode>call_init</icode>
-	    stop the process. The third clause ensures we stop the
-	    process just before starting the initialization code. We
-	    need to call this script
-	    with <strong><em>DTrace</em></strong>'s
-	    <icode>-w</icode> flag, to allow destructive operations
-	    (like stopping the process).
+	    This script has three clauses, the first one checks when we are executing <a href="/man/dlopen.3.html"><man-ref>dlopen(3)</man-ref></a>
+	    for the target library we want.
+
+	    In that case we set a thread-local variable stating that we are intending to trace, the second clause removes that thread-local
+	    variable so no other calls to <icode>call_init</icode> stop the process.
+
+	    The third clause ensures we stop the process just before starting the initialization code.
+	    We need to call this script with <strong><em>DTrace</em></strong>'s <icode>-w</icode> flag,
+	    to allow destructive operations (like stopping the process).
 	  </p>
 
 	  <p>
@@ -611,20 +569,16 @@
 	  </code>
 
 	  <p>
-	    Now we kill the first dtrace program since we can only
-	    trace a program once and run the second D script. That
-	    will automatically resume the process and output trace
-	    logs if any of the probes matched. <strong><em>They
-	    didn't. Does <a href="/man/ld.so.1.1.html"><man-ref>ld.so.1(1)</man-ref></a>
-	    support <icode>.init_array</icode>?</em></strong>.
+	    Now we kill the first dtrace program since we can only trace a program once and run the second D script.
+	    That will automatically resume the process and output trace logs if any of the probes matched.
+	    <strong><em>They did not. Does <a href="/man/ld.so.1.1.html"><man-ref>ld.so.1(1)</man-ref></a> support <icode>.init_array</icode>?</em></strong>.
 	  </p>
 
 	  <h2>Et tu, ELF?</h2>
 
 	  <p>
-	    It turns out that it does indeed support it, I started reading the code and from the same
-	    <icode>call_init</icode> function we traced we can quickly see that it does indeed call
-	    whatever is in <icode>.init_array</icode>
+	    It does support it. I examined the code and, from the same <icode>call_init</icode> function we traced, we can see that it 
+	    calls the functions in <icode>.init_array</icode>
 	  </p>
 
 	  <code>
@@ -636,15 +590,16 @@
 	  </code>
 
 	  <p>
-	    You can also check the
-	    <a href="https://github.com/illumos/illumos-gate/blob/master/usr/src/cmd/sgs/rtld/common/util.c#L659">
-	      code for <icode>call_array</icode>
-	    </a>. It's very straightforward, iterate over the array and call each function in turn.
+	    You can also check the <a href="https://github.com/illumos/illumos-gate/blob/master/usr/src/cmd/sgs/rtld/common/util.c#L659">
+	      code for <icode>call_array</icode> </a>.
+
+	    It is very straightforward, iterate over the array and call each function in turn.
 	    <em>So, why aren't they being called?</em>.
-	    Let's try to get some more information from the <icode>call_init</icode> function. This function takes
-	    as first parameter an <icode>Rt_map</icode>, let's see what that looks like and if we can get
-	    any extra information from there, for example the size of the array. We'll write a D script that
-	    introspects into this struct.
+	    Let's try to get some more information from the <icode>call_init</icode> function.
+	    This function takes as its first parameter, an <icode>Rt_map</icode>.
+	    Let's see what that looks like and if we can get any extra information from there.
+	    For example the size of the array.
+	    We'll write a D script that introspects into this struct.
 	  </p>
 
 	  <code>
@@ -662,10 +617,8 @@
 	  </code>
 
 	  <p>
-	    I've zoomed into the relevant fields, you can check the whole struct
-	    <a href="https://github.com/illumos/illumos-gate/blob/master/usr/src/cmd/sgs/include/rtld.h#L663-L733">here</a>.
-	    Let's modify the <icode>stop()</icode> script to print the <icode>rt_initarraysz</icode> that is passed
-	    to <icode>call_array</icode>.
+	    I have zoomed in on the relevant fields, you can check the whole struct <a href="https://github.com/illumos/illumos-gate/blob/master/usr/src/cmd/sgs/include/rtld.h#L663-L733">here</a>.
+	    Let's modify the <icode>stop()</icode> script to print the <icode>rt_initarraysz</icode> that is passed to <icode>call_array</icode>.
 	  </p>
 
 	  <code>
@@ -699,12 +652,11 @@
 
 	  <p>
 	    When I ran this I got: <icode>CALL ARRAY (size: 8)</icode>, now taking into
-	    account that this is in bytes, this means the array <em>only has one element!!!</em>
+	    account that this is in bytes, this means the array <em>only has one element!</em>
 	  </p>
 
 	  <p>
-	    Let's check
-	    what <a href="/man/elfedit.1.html"><man-ref>elfedit(1)</man-ref></a>
+	    Let's check what <a href="/man/elfedit.1.html"><man-ref>elfedit(1)</man-ref></a>
 	    has to say about the <icode>.init_array</icode> section
 	    and why it reports a size of 1 when I see
 	    10 <icode>__CTOR</icode> symbols inside.
@@ -729,36 +681,25 @@
 	  </code>
 
 	  <p>
-	    <em>Ooh..</em> we
-	    get <strong>TWO</strong> <icode>.init_array</icode>
-	    sections!! And the first one has one entry (<icode>0x8
-	    bytes</icode>). Looking at
-	    the <a href="/man/ld.so.1.1.html"><man-ref>ld.so.1(1)</man-ref></a>
-	    <icode>call_init</icode> code again I can see that it only
-	    expects a single <icode>.init_array</icode> section, and I
-	    guess it takes the first one it sees? (The answer is no,
-	    but I didn't know yet).
+	    <em>Ooh..</em> we get <strong>TWO</strong> <icode>.init_array</icode> sections!!
+	    And the first one has one entry (<icode>0x8 bytes</icode>).
+	    Looking at the <a href="/man/ld.so.1.1.html"><man-ref>ld.so.1(1)</man-ref></a> <icode>call_init</icode> code again I can see that it only
+	    expects a single <icode>.init_array</icode> section, and I guess it takes the first one it sees? (The answer is no, but I didn't know yet).
 	  </p>
 
 	  <h2>Et tu, <icode>/usr/bin/ld</icode>?</h2>
 
 	  <p>
-	    Okay, so how do I fix this? Several things came to mind,
-	    first thing was to create a link script, however it seems
-	    that the Illumos linker is a bit more limited in this
-	    aspect than the GNU one I'm (more or less) used to. There
-	    is a thing called a <icode>mapfile</icode> but the
-	    documentation is honestly pretty bad and I couldn't figure
-	    it out.
+	    Okay, so how do I fix this? Several things came to mind, first thing was to create a link script, however it seems
+	    that the Illumos linker is a bit more limited in this aspect than the GNU one I'm (more or less) used to.
+
+	    There is a thing called a <icode>mapfile</icode> but the documentation is honestly pretty bad and I couldn't figure it out.
 	  </p>
 
 	  <p>
-	    The next thing I tested was creating a C program
-	    using <a href="/man/libelf.3lib.html"><man-ref>libelf(3lib)</man-ref></a>,
-	    I did implement it trying to merge both sections. When I
-	    did tho elfdump complained a lot about a lot of broken
-	    references.  In between those complaints I saw one thing
-	    that caught my eye.
+	    The next thing I tested was creating a C program using <a href="/man/libelf.3lib.html"><man-ref>libelf(3lib)</man-ref></a> to try to merge both sections.
+	    However, when I did, <a href="/man/elfdump.1.html"><man-ref>elfdump(1)</man-ref></a> reported many errors about broken references.
+	    In between those complaints I saw one thing that caught my eye.
 	  </p>
 
 	  <code>
@@ -827,7 +768,7 @@
 	    So, what happens if I change these values to the values for the other
 	    <icode>.init_array</icode> section? We can do that easily with <a href="/man/elfedit.1.html"><man-ref>elfedit(1)</man-ref></a>.
 	    Note that we also set the <icode>sh_type</icode> of the "wrong" section to
-	    <icode>SHT_NULL</icode>, I'm not sure if it's needed but <a href="/man/elfdump.1.html"><man-ref>elfdump(1)</man-ref></a>
+	    <icode>SHT_NULL</icode>, I'm not sure if it is needed but <a href="/man/elfdump.1.html"><man-ref>elfdump(1)</man-ref></a>
 	    complains if I don't do it.
 	  </p>
 
