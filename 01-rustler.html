@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     
-    <title>Debugging Rustler on Illumos - SYSTEM&bull;ILLUMINATION</title>
+    <title>Debugging Rustler on illumos - SYSTEM&bull;ILLUMINATION</title>
     <link rel="stylesheet" href="/style.css" />
     <link rel="icon" type="image/png" href="/favicon.png" />
   </head>
@@ -21,7 +21,7 @@
 
     <div class="container">
       <main class="article">
-	<h1 class="title">Illumination #001: Debugging Rustler on Illumos</h1>
+	<h1 class="title">Illumination #001: Debugging Rustler on illumos</h1>
 	<div class="content">
 	  <p>
 	    Welcome to <span class="sun">SYSTEM</span>&bull;ILLUMINATION! This is the first
@@ -31,19 +31,19 @@
 	  </p>
 
 	  <disclaimer>
-	    I'm a beginner with Illumos. This page serves a twofold purpose: to help me
-	    document and clarify my learnings as I delve into the Illumos/Solaris world.
+	    I'm a beginner with illumos. This page serves a twofold purpose: to help me
+	    document and clarify my learnings as I delve into the illumos/Solaris world.
 	    And to shine a bit of light into a system that is fairly obscure and hard
 	    to get good info on. However, because I'm also learning it, I may be wrong
 	    on many things. Use the information in these pages as a starting point for
 	    your own investigations.
 	  </disclaimer>
 
-	  <h2>From Linux to Illumos</h2>
+	  <h2>From Linux to illumos</h2>
 
 	  <p>
 	    Recently I decided I wanted to delve deeper into the
-	    Illumos ecosystem; I had briefly used it a couple of years ago
+	    illumos ecosystem; I had briefly used it a couple of years ago
 	    for a small server I was running. Two weeks ago, I had
 	    to decide on and build the final infrastructure
 	    for <a href="https://katarineko.com">Katarineko</a> a
@@ -86,7 +86,7 @@
 	  <h2><span class="sun">dtrace</span> primer</h2>
 
 	  <p>
-	    One reason for moving to Illumos was to
+	    One reason for moving to illumos was to
 	    learn <a href="/man/dtrace.8.html"><man-ref>dtrace(8)</man-ref></a>.
 	    <strong><em>dtrace</em></strong> is a dynamic tracing
 	    framework to observe the state and evolution of the system
@@ -278,7 +278,7 @@
 	  <p>
 	    When Erlang loads a NIF shared library, it looks for a symbol <icode>nif_init</icode> and calls it with no arguments.
 	    This function returns an <icode>ErlNifEntry</icode> that, among other information, contains a field useful for us: <icode>num_of_funcs</icode>.
-	    I was thinking that maybe, for some reason, under Illumos Rustler was not properly populating the function array.
+	    I was thinking that maybe, for some reason, under illumos Rustler was not properly populating the function array.
 	  </p>
 
 	  <p>
@@ -330,7 +330,7 @@
 	    I compiled this as a shared library and loaded this library instead of the original.
 	    It all loaded fine, the name and version looked good (so it seems we did have a valid entry).
 	    However the number of functions was zero.
-	    It seems that whatever Rustler does to gather all the NIFs wasn't working on Illumos.
+	    It seems that whatever Rustler does to gather all the NIFs wasn't working on illumos.
 	  </p>
 
 	  <h2>Rustler Internals</h2>
@@ -436,7 +436,7 @@
 	    Calling all of these functions populates a linked list (using the <icode>next</icode> attribute from the <icode>Node</icode> type)
 	    that will then be walked by the <icode>iter()</icode> method we saw earlier.
 
-	    The last piece of the puzzle adds the address of <icode>__ctor()</icode> to the <icode>.init_array</icode> section of the ELF file in the case of Illumos.
+	    The last piece of the puzzle adds the address of <icode>__ctor()</icode> to the <icode>.init_array</icode> section of the ELF file in the case of illumos.
 	  </p>
 
 	  <code>
@@ -476,7 +476,7 @@
 	  <h2><icode>ld.so.1</icode></h2>
 
 	  <p>
-	    <a href="/man/ld.so.1.1.html"><man-ref>ld.so.1(1)</man-ref></a> is the Illumos runtime linker for dynamic objects, and it is responsible 
+	    <a href="/man/ld.so.1.1.html"><man-ref>ld.so.1(1)</man-ref></a> is the illumos runtime linker for dynamic objects, and it is responsible 
 	    for loading the shared library objects like our NIF library.
 
 	    One of the tasks after loading and resolving symbols is calling the initialization functions, there are several sections for this, but as mentioned
@@ -503,7 +503,7 @@
 
 	  <p>
 	    So they are where they are supposed to be; what's unclear is whether they are properly called.
-	    Since it is not working maybe the Illumos runtime linker doesn't take into account <icode>.init_array</icode>?
+	    Since it is not working maybe the illumos runtime linker doesn't take into account <icode>.init_array</icode>?
 	    The other option is that the functions themselves are not working but I find that unlikely and I don't think there should be a
 	    difference between Linux and Ilumos in this case.
 
@@ -691,7 +691,7 @@
 
 	  <p>
 	    Okay, so how do I fix this? Several things came to mind, first thing was to create a link script, however it seems
-	    that the Illumos linker is a bit more limited in this aspect than the GNU one I'm (more or less) used to.
+	    that the illumos linker is a bit more limited in this aspect than the GNU one I'm (more or less) used to.
 
 	    There is a thing called a <icode>mapfile</icode> but the documentation is honestly pretty bad and I couldn't figure it out.
 	  </p>
@@ -798,7 +798,7 @@
 	    different flags, which prevents the sections from merging. The "wrong" section has
 	    <icode>sh_flags: [ SHF_WRITE SHF_ALLOC ]</icode> while the correct one has
 	    <icode>sh_flags: [ SHF_WRITE SHF_ALLOC 0x100000 ]</icode>. That <icode>0x100000</icode>
-	    flag is a Solaris flag that is not recognized by Illumos, from my research it corresponds
+	    flag is a Solaris flag that is not recognized by illumos, from my research it corresponds
 	    to <icode>SHF_SUNW_NODISCARD</icode>, which prevents the compiler and linker from
 	    discarding the section even if it appears unused. I wonder what's adding that flag?
 	    <a href="https://reviews.llvm.org/D107955">Is it LLVM?</a> Maybe the <icode>#[used]</icode>
