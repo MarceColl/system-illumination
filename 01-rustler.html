@@ -42,12 +42,14 @@
 	  <h2>From Linux to Illumos</h2>
 
 	  <p>
-	    Recently I decided I wanted to delve deeper into the Illumos world; I had
-	    briefly used it a couple of years ago for a small server I was running.
-	    Two of weeks ago I had to decide on and build the final infrastructure
-	    for <a href="https://katarineko.com">Katarineko</a> a personal project I'm
-	    about to release. I had the choice between my trusted Linux or giving in to the
-	    voice in my head that said <em>USE ILLUMOS!</em>. I did give in, maybe
+	    Recently I decided I wanted to delve deeper into the
+	    Illumos world; I had briefly used it a couple of years ago
+	    for a small server I was running.  Two of weeks ago I had
+	    to decide on and build the final infrastructure
+	    for <a href="https://katarineko.com">Katarineko</a> a
+	    personal project I'm about to release. I had the choice
+	    between my trusted Linux or giving in to the voice in my
+	    head that said <em>USE ILLUMOS!</em>. I did give in, maybe
 	    not the sanest choice, but it's my choice.
 	  </p>
 
@@ -143,8 +145,8 @@
 	  <h2>Erlang NIFs with Rustler</h2>
 
 	  <p>
-	    Okay, so NIFs didn't load, how do NIFs usually load? At
-	    this point the only thing I know is that NIFs are loaded
+	    Okay, so NIFs didn't load, how do NIFs usually load?
+	    The only thing I knew is that NIFs are loaded
 	    from a shared library, an <icode>.so</icode> file in
 	    unixes. So let's use <strong><em>DTrace</em></strong> to
 	    figure out what erlang code is responsible for this to try
@@ -152,7 +154,7 @@
 	    object, it's probably using dlopen.  For reasons I can't
 	    remember I traced
 	    the <a href="/man/open.2.html"><man-ref>open(2)</man-ref></a>
-	    syscall instead.  Here's a very small script I wrote for
+	    syscall instead. Here's a very small script I wrote for
 	    this purpose.
 	  </p>
 
@@ -171,7 +173,7 @@
 	  </code>
 
 	  <p>
-	    This D script contains only one clause, that will execute the actions whenever
+	    This D script contains only one clause, which will execute the actions whenever
 	    the target process (specified by <icode>-p</icode> or
 	    <icode>-c</icode>) executes the <em>open</em> syscall with a first argument
 	    that contains the string <icode>"libkatarineko_srs"</icode>. If that matches
@@ -203,15 +205,17 @@
 	  </code>
 
 	  <p>
-	    We very quickly find out <a href="https://github.com/erlang/otp/blob/ed8445a63861f510d21e27c9122e4fafa8039d9d/erts/emulator/beam/erl_nif.c#L4679">which function</a>
-	    in erlang is responsible for loading the nifs. Let's take a look into the
-	    function and see what could be going wrong or what else
-	    we could inspect to understand the problem better. After opening this function
-	    I could clearly see that if there was an error loading anything from the NIF
-	    I should have known, since it seems to have covered any possible error case.
-	    In case I wasn't being shown the errors from <icode>load_nif_error</icode>
-	    I added a user function trace for <icode>load_nif_error</icode>,
-	    but it was never called.
+	    We very quickly find
+	    out <a href="https://github.com/erlang/otp/blob/ed8445a63861f510d21e27c9122e4fafa8039d9d/erts/emulator/beam/erl_nif.c#L4679">which
+	    function</a> in erlang is responsible for loading the
+	    nifs. Let's take a look at the function and see what could
+	    be going wrong or what else we could inspect to understand
+	    the problem better. The function seems to take care of
+	    most error conditions that were going on through my
+	    mind. It seemed to me like there was no problem loading
+	    the shared library at all. In case I was wrong I added a
+	    user function trace for <icode>load_nif_error</icode>, but
+	    it was never called.
 	  </p>
 
 	  <code>
@@ -236,12 +240,15 @@
 	  </code>
 
 	  <p>
-	    It was properly called, so it seemed at this point that erlang was properly loading
-	    everything and it was considering that everything was working fine, however no
-	    NIF was actually being loaded. At this point I needed to understand a bit more
-	    how the shared library actually exposes the NIFs and how erlang discovers the functions.
-	    Here I also cloned the rustler repo and checked if the tests failed for their repo
-	    as well or if it was my own setup. All their tests failed as well.
+	    It was properly called, so it seemed that
+	    erlang was properly loading everything and it was
+	    considering that everything was working fine, however no
+	    NIF was actually being loaded. I needed to understand a
+	    bit more how the shared library actually exposes the NIFs
+	    and how erlang discovers the functions.  Here I also
+	    cloned the rustler repo and checked if the tests failed
+	    for their repo as well or if it was my own setup. All
+	    their tests failed as well.
 	  </p>
 
 	  <h2>NIF Shared Libraries</h2>
@@ -283,13 +290,13 @@
 	    <icode>nif_init</icode> and calls it with no arguments,
 	    this function returns an <icode>ErlNifEntry</icode> that
 	    among other stuff contains a piece of information very useful for us. The
-	    <icode>num_of_funcs</icode>. At this point I was thinking
+	    <icode>num_of_funcs</icode>. I was thinking
 	    that maybe, for some reason, under Illumos rustler was not properly
 	    populating the function array.
 	  </p>
 
 	  <p>
-	    Now, at this point I wasn't sure how to use structs in DTrace, and I was in an
+	    Now, I wasn't sure how to use structs in DTrace, and I was in an
 	    <a href="https://en.wikipedia.org/wiki/AVE">AVE</a> heading to my first
 	    <a href="https://en.wikipedia.org/wiki/Go_(game)">Go</a> tournament and I had
 	    very bad internet so I went with what I knew. I created a small shared library
@@ -346,7 +353,7 @@
 	  <h2>Rustler Internals</h2>
 
 	  <p>
-	    At this point I dove into the
+	    I dove into the
 	    <a href="https://github.com/rusterlium/rustler/blob/master/">rustler codebase</a>.
 	    It's fairly small but it contains a lot of fairly hard to follow code (at least for me)
 	    with several macros and code generation. Since I knew that at some point it had to generate
@@ -383,7 +390,7 @@
 	  <p>
 	    Somehow, at the top level this <icode>submit!</icode> was adding
 	    structs to this <icode>inventory</icode> structure. And this mechanism
-	    intuitively seemed to be the culprit at this point. I validated that these macros
+	    intuitively seemed to be the culprit. I validated that these macros
 	    were being called for the functions I was exposing, but when collecting the
 	    NIFs, they were empty. One more layer, enter the
 	    <a href="https://github.com/dtolnay/inventory">Inventory crate</a>.
